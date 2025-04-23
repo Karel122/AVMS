@@ -1,0 +1,76 @@
+import subprocess
+import openpyxl
+from openpyxl.styles import PatternFill
+
+# Step 1: Launch Dewesoft
+dewesoft_path = r"C:\Program Files\DewesoftX\Bin\DewesoftX.exe"  # Adjust this path as needed
+subprocess.Popen(dewesoft_path)
+
+# Step 2: Create Excel file with sample data
+file_path = "dewesoft_voltage_check.xlsx"
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.title = "Data1"
+
+# Headers
+headers = ["A", "B", "C", "D", "E", "F", "G", "H"]
+ws.append(headers)
+
+# Sample Data (you can replace this with exported Dewesoft data)
+data_rows = [
+    [0, 5.0, 0, 0.15000001, 0.15000001, 0, 1, 0],
+    [0, 5.5, 0, 0.15000001, 0.15000001, 0, 1, 0],
+    [0, 11.5, 0, 2.3999999, 2.3999999, 0, 2, 0],
+    [0, 10.0, 0, 2.3999999, 2.3999999, 0, 2, 0],
+]
+
+for row in data_rows:
+    ws.append(row)
+
+# Step 3: Apply logic to the data
+result_col = len(headers) + 1
+ws.cell(row=1, column=result_col, value="Voltage Check")
+
+# Define rule values
+g1_d_values = [
+    0.15000001, 0.30000001, 0.45000002, 0.60000002,
+    0.75, 0.89999998, 1.05, 1.1999999, 1.3499999, 1.4999999
+]
+g2_d_values = [
+    0.15000001, 0.30000001, 0.90000004, 1.2, 1.5,
+    1.8, 2.0999999, 2.3999999, 2.6999998, 2.9999998
+]
+
+green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+for row in range(2, ws.max_row + 1):
+    g = ws[f'G{row}'].value
+    h = ws[f'H{row}'].value
+    d = ws[f'D{row}'].value
+    e = ws[f'E{row}'].value
+    b = ws[f'B{row}'].value
+    cell = ws.cell(row=row, column=result_col)
+
+    if h == 0 and d == e:
+        if g == 1 and d in g1_d_values:
+            if 4.75 <= b <= 5.25:
+                cell.value = "OK"
+                cell.fill = green_fill
+            else:
+                cell.value = "NOT OK"
+                cell.fill = red_fill
+        elif g == 2 and d in g2_d_values:
+            if 11.4 <= b <= 12.6:
+                cell.value = "OK"
+                cell.fill = green_fill
+            else:
+                cell.value = "NOT OK"
+                cell.fill = red_fill
+    else:
+        cell.value = ""
+
+# Save the Excel file
+wb.save(file_path)
+
+print(f"✅ Dewesoft launched and Excel file created: {file_path}")
