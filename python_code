@@ -1,0 +1,59 @@
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+
+# naloži exel
+wb = load_workbook("/mnt/data/poskus1(2).xlsx")
+ws = wb['Data1']
+
+# odstrani vse stoplce, ki so nad H=8
+while ws.max_column > 8:
+    ws.delete_cols(9)
+
+# dodaj stolpec
+result_col = ws.max_column + 1
+ws.cell(row=1, column=result_col, value="Voltage Check Full")
+
+#barve
+green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+# definiraj D
+g1_d_values = [
+    0.15000001, 0.30000001, 0.45000002, 0.60000002,
+    0.75, 0.89999998, 1.05, 1.1999999, 1.3499999, 1.4999999
+]
+
+g2_d_values = [
+    0.15000001, 0.30000001, 0.90000004, 1.2, 1.5,
+    1.8, 2.0999999, 2.3999999, 2.6999998, 2.9999998
+]
+
+#logika
+for row in range(2, ws.max_row + 1):
+    val_g = ws[f'G{row}'].value
+    val_h = ws[f'H{row}'].value
+    val_d = ws[f'D{row}'].value
+    val_e = ws[f'E{row}'].value
+    val_b = ws[f'B{row}'].value
+    result_cell = ws.cell(row=row, column=result_col)
+
+    if val_h == 0 and val_d == val_e:
+        if val_g == 1 and val_d in g1_d_values:
+            if val_b is not None and 4.75 <= val_b <= 5.25:
+                result_cell.value = "OK"
+                result_cell.fill = green_fill
+            else:
+                result_cell.value = "NOT OK"
+                result_cell.fill = red_fill
+        elif val_g == 2 and val_d in g2_d_values:
+            if val_b is not None and 11.4 <= val_b <= 12.6:
+                result_cell.value = "OK"
+                result_cell.fill = green_fill
+            else:
+                result_cell.value = "NOT OK"
+                result_cell.fill = red_fill
+    else:
+        result_cell.value = ""
+
+# shrni
+wb.save("/mnt/data/Voltage_Check_Latest.xlsx")
